@@ -458,10 +458,12 @@ void train_print_report(char* rt,const void *report)
 
 void train(const void* datap,const void* param_, void* vector_,void* report_x_2_)
 {
+  //convert pointer
   const Parameter* param=(const Parameter*)param_;
   Double* vector=(Double*)vector_;
   Report_T* report_x_2=(Report_T*)report_x_2_;
 
+  //expand datap
   const void* datap_=datap;
   const Int* p1=(const Int*)datap_;
   datap_+=sizeof(Int)*(ncust+1);
@@ -472,11 +474,6 @@ void train(const void* datap,const void* param_, void* vector_,void* report_x_2_
   datap_+=sizeof(Int64)*(ntrain);
   const Int64* sort2=(const Int64*)datap_;
   datap_+=sizeof(Int64)*(ntrain);
-
-  int t;
-  for(t=0;t<10;t++){
-    printf("p2[%d]=%d\n",t,p2[t]);
-  }
 
   Double* v1=vector;
   Double* v2=vector+param->dim*2*ncust;

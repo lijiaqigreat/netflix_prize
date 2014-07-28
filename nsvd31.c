@@ -9,7 +9,7 @@
 #define ABS(a) (a)>0?(a):-(a)
 #define DIM 10
 
-#define LAMDA 0.00001
+#define LAMDA 0.0001
 
 typedef double Double;
 typedef struct{
@@ -203,11 +203,12 @@ static int newton2(Double *fS,Double *v1,const Double *v2,const Data data,const 
       ddv[tt]+=c*v2_[tt%data.ndim]*v2_[tt/data.ndim];
     }
 
-    //update LAMDA
-    add(dv,dv,v1,LAMDA,data.ndim);
-    for(tt=0;tt<data.ndim;tt++){
-      ddv[tt*data.ndim+tt]+=LAMDA;
-    }
+  }
+  //update LAMDA
+  int tt;
+  add(dv,dv,v1,LAMDA,data.ndim);
+  for(tt=0;tt<data.ndim;tt++){
+    ddv[tt*data.ndim+tt]+=LAMDA;
   }
   //solve equation
   //A*A
