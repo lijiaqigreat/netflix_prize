@@ -349,9 +349,9 @@ int train_prepare_data(void** datap,const Int64* data1,const void* param)
   int t1;
   memset(datap_,0,sizeof(Int)*(ncust+nmovie+2));
   Int* p1=(Int*)datap_;
-  datap_+=sizeof(Int)*(ncust+1);
+  datap_+=(ncust+1);
   Int* p2=(Int*)datap_;
-  datap_+=sizeof(Int)*(nmovie+1);
+  datap_+=(nmovie+1);
 
   Int* sort1=datap_;
   datap_+=(ntrain);
