@@ -1,0 +1,69 @@
+model:
+  f(x)=exp(x)/(exp(x)+exp(-x))
+  
+
+e_score=f((v1+v2*t)*v3)
+
+
+parameter:
+  training:
+    iteration
+    dimension
+    random seed
+    k1: cost for size of x,y
+    k2: cost for size of xt
+    k3: ??? related to day to day user's mood
+  testing:
+    random seed
+    persentage of evaluation
+    iteration
+
+names:
+  u: users
+  m: movies
+  v: vectors
+    vu,vut,vm
+
+data:
+  ndata= 100480507;
+  nmaxid= 2649429;
+  ncust= 480189;19b
+  nmovie= 17770;15b
+  time: 12b
+  ranking:3b
+  raw data:time<<48+ranking<<40+custi<<16+moviei;
+  processed data:i<<32+ranking<<16+n_time;
+  
+
+report:
+  general:
+    date
+    all parameters
+    ndata,ncust,nsize
+    training ndata
+    qualify ndata
+  generate:
+    none
+  train:
+    newton:
+      number of line search step
+      length of movement
+      score
+      (time? use gprof)
+  judge:
+    SCORE
+tmp:
+  index:
+    p: ndata,nuser
+    i: ncust
+    dr: date*5+rank
+10^8*2*5
+4+2+1=7
+(v1+t*v1t)*(v2+t*v2t)
+
+  
+  
+  
+    
+
+  
