@@ -57,7 +57,7 @@ static inline Double func_abs(Double x)
 static Double func_g_0(Double x)
 {
   //log(double_max)
-  if(x<-300.){
+  if(x<-200.){
     return 2*x;
   }else{
     return -log(1+exp(-2*x));
@@ -226,6 +226,8 @@ static void newton(Report_T *report,Double* v1,const Double* v2,const int N,cons
     memset(dv,0,sizeof(Double)*dim2);
     memset(ddv,0,sizeof(Double)*dim2*dim2);
     Double *v2sort=MALLOC(Double,dim2*(p[t1+1]-p[t1]));
+    //init v2sort
+    //TODO condense v2sort from dim2 to dim
     for(t2=p[t1];t2<p[t1+1];t2++){
       Int64 n=i[t2];
       Int n_i=(n>>32)&0xffffff;
