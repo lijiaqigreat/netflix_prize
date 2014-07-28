@@ -268,10 +268,11 @@ static void newton(Report_T *report,Double* v1,const Double* v2,const int N,cons
 
       for(t3=0;t3<dim*dim;t3++){
         Double tmp=c*tmpv[t3%dim]*tmpv[t3/dim];
-        ddv[t3]+=tmp;
-        ddv[t3+dim]+=tmp*n_time;
-        ddv[t3+dim*dim2]+=tmp*n_time;
-        ddv[t3+dim*(dim2+1)]+=tmp*n_time*n_time;
+        int t3_=(t3/dim*dim2)+(t3%dim);
+        ddv[t3_]+=tmp;
+        ddv[t3_+dim]+=tmp*n_time;
+        ddv[t3_+dim*dim2]+=tmp*n_time;
+        ddv[t3_+dim*(dim2+1)]+=tmp*n_time*n_time;
       }
     }
     //CHANGE move this one loop out
@@ -280,7 +281,7 @@ static void newton(Report_T *report,Double* v1,const Double* v2,const int N,cons
     Double k2=param->k1;
     for(t2=0;t2<dim;t2++){
       dv[t2]+=v1_[t2]*k1;
-      ddv[t2*dim2+t2]+=k1;
+      ddv[t2*(dim2+1)]+=k1;
       dv[t2+dim]+=v1_[t2+dim]*k2;
       ddv[(t2+dim)*(dim2+1)]+=k2;
     }
