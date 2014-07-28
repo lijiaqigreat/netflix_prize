@@ -473,6 +473,11 @@ void train(const void* datap,const void* param_, void* vector_,void* report_x_2_
   const Int64* sort2=(const Int64*)datap_;
   datap_+=sizeof(Int64)*(ntrain);
 
+  int t;
+  for(t=0;t<10;t++){
+    printf("p2[%d]=%d\n",t,p2[t]);
+  }
+
   Double* v1=vector;
   Double* v2=vector+param->dim*2*ncust;
   newton(report_x_2  ,v1,v2,ncust ,p1,sort1,param);

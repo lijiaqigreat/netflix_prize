@@ -382,8 +382,8 @@ int train_prepare_data(void** datap,const Int64* data1,const void* param)
     Int n_cust=(n>>16)&0xffffff;
     Int n_ranking=(n>>40)&0xff;
     Int n_time=(n>>48)&0xffff;
-    sort1[p1[n_cust]++]=n_movie;
-    sort2[p2[n_movie]++]=n_cust;
+    sort1[p1[n_cust]++]=n_movie*5+n_ranking;
+    sort2[p2[n_movie]++]=n_cust*5+n_ranking;
   }
 
   //recover p1,p2
@@ -439,9 +439,6 @@ void train(const void* dat,const void* param,void *vector,void* report_x_2)
   printf("(ndata: %d)(ncust: %d)(nmovie: %d)\n",data.ndata,data.cust.n,data.movie.n);
   //data.ndata=10000000;
 
-  for(t=0;t<10;t++){
-    printf("p2[%d]=%d\n",t,data.movie.p[t]);
-  }
   
 
   //init vector
