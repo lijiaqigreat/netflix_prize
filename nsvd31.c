@@ -329,7 +329,7 @@ int train_prepare_vector(void** vector_,void* param)
   Double* vector=malloc(sizeof(Double)*size);
   *vector_=vector;
   for(size--;size>=0;size--){
-    ((Double*)vector)[size]=((Double)rand()/RAND_MAX-0.5)/10;
+    ((Double*)vector)[size]=0;
   }
   return size*sizeof(Double);
 }
@@ -447,6 +447,37 @@ void train(const void* dat,const void* param,void *vector,void* report_x_2)
   vector+=sizeof(Double)*data.cust.n*data.ndim;
   Double* v2=(Double*)vector;
   vector+=sizeof(Double)*data.cust.n*data.ndim;
+  if(v1[0]==0){
+    //init vector
+    int t1,t2;
+    for(t1=0;t1<ncust;t1++){
+      v1[t1*DIM]=1;
+      for(t2=1;t2<DIM;t2++){
+        v1[t1*DIM+t2]=((Double)rand()/RAND_MAX-0.5)/100;
+      }
+    }
+    for(t1=0;t1<nmovie;t1++){
+      Double sum=0;
+      for(t2=data.movie.p[t1];t2<data.movie.p[t1+1];t2++){
+        int rank=data.movie.i[t2]%5;
+        sum+=rank;
+      }
+      sum/=data.movie.p[t1+1]-data.movie.p[t1];
+      sum/=4;
+      if(sum>0.99999){
+        sum=DMAXL;
+      }else if(sum<0.00001){
+        sum=-DMAXL;
+      }else{
+        sum=-log((1/sum)-1)/2;
+      }
+      v2[t1*DIM]=sum;
+      for(t2=1;t2<DIM;t2++){
+        v2[t1*DIM+t2]=((Double)rand()/RAND_MAX-0.5)/100;
+      }
+    }
+    return;
+  }
 
   printf("starting iteration\n");
   time_t time0,time1;
