@@ -9,7 +9,7 @@
 #define ABS(a) (a)>0?(a):-(a)
 #define DIM 10
 
-#define LAMDA 0.0001
+#define LAMDA 0.01
 
 typedef double Double;
 typedef struct{
