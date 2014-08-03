@@ -1,5 +1,30 @@
 model:
+  variable:
+    v10(i),v20(j),v1t(i),v2t(j)
+  v1(i,t)=v10(i)+v1t(i)*t;
+  v2(i,t)=v20(i)+v2t(i)*t;
+    moving vector
   f(x)=exp(x)/(exp(x)+exp(-x))
+    regularizer: (-inf,inf) -> (0,1)
+    f(-x)=1-f(x)
+    f(x)=1/(1+exp(-2*x))
+  g(x)=log(f(x))
+    g(x)=-log(1+exp(-2*x))
+    g'(x)=2*exp(-2*x)/(1+exp(-2*x))
+         =exp(-x)/cosh(x)
+         =(cosh(x)-sinh(x))/cosh(x)
+         =1-tanh(x)
+    g''(x)=-cosh(x)^-2
+  p(i,j,t)=f(v1(i,t)*v2(j,t))
+  p(i,j,t,r)=p(i,j,t)^r*(1-p(i,j,t))^(4-r)
+    log(p(i,j,t,r))=r*p(i,j,t)+(4-r)*(1-p(i,j,t))
+  S=-sum(log(p(i,j,t,r)),(i,j,t,r) in data)
+    negative log likelyhood
+
+    
+
+  v
+  est(i,j,t)=
   
 
 e_score=f((v1+v2*t)*v3)
@@ -61,6 +86,8 @@ tmp:
 4+2+1=7
 (v1+t*v1t)*(v2+t*v2t)
 
+TODO:
+  add |v1|^2 to S0
   
   
   

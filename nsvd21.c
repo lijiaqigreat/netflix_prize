@@ -30,6 +30,12 @@ typedef struct{
   Double time;
 } Report_T;
 
+typedef struct{
+  Int n;
+  Int* p;
+  Int64* i;
+} Index;
+
 /*
  * TODO:
  * check dim for dim2
@@ -46,7 +52,7 @@ static Double dott(const Double *v1,const Double *v2,Int time,int dim);
 
 static int solve(Double *matrix,Double *b,const int ndim);
 static Double updateV(Report_T *report,Double *v1_,Double *tmpv,const Double* v2sort,const Double *dv,const Int64* i,const int N,const Double S0,const Double dots,const Parameter *param);
-static Double getS_0(const Double* v1_,const Double* v2sort,const Int64 *i,const int N,int ndim);
+static Double getS_0(const Double* v1_,const Double* v2sort,const Int64 *i,const int N,const Parameter* param);
 static void newton(Report_T *report,Double* v1,const Double* v2,const int N,const Int* p,const Int64* i,const Parameter* param);
 
 static inline Double func_abs(Double x)
@@ -161,11 +167,11 @@ static Double updateV(Report_T *report,Double *v1_,Double *tmpv,const Double* v2
   int dim2=param->dim*2;
   int count=0;
   Double step=1;
-  memcpy(tmpv,v1_,sizeof(Double)*dim2);
+  //memcpy(tmpv,v1_,sizeof(Double)*dim2);
   Double S1;
   while(1){
     add(tmpv,v1_,dv,step,dim2);
-    S1=getS_0(tmpv,v2sort,i,N,dim2/2);
+    S1=getS_0(tmpv,v2sort,i,N,param);
     printf("S0,dS,ldS,pdedS: %f %e %e %e\n",S0,S0-S1,step*dots,(S0-S1+dots*step*(2-step)/2)/((S0-S1)*(S0-S1)));
     if(S0-S1>=-step*dots*param->line_beta){
       memcpy(v1_,tmpv,sizeof(Double)*dim2);
@@ -179,10 +185,15 @@ static Double updateV(Report_T *report,Double *v1_,Double *tmpv,const Double* v2
   }
 }
 
-static Double getS_0(const Double* v1_,const Double* v2sort,const Int64 *i,const int N,int dim)
+static Double getS_0(const Double* v1_,const Double* v2sort,const Int64 *i,const int N,const Parameter* param)
 {
+  int dim=param->dim;
   int t;
   Double f=0;
+  for(t=0;t<dim;t++){
+    f+=v1_[t    ]*v1_[t    ]*param->k1/2;
+    f+=v1_[t+dim]*v1_[t+dim]*param->k2/2;
+  }
   for(t=0;t<N;t++){
     Int64 n=i[t];
     //not needed since v2 is sorted
@@ -198,9 +209,9 @@ static Double getS_0(const Double* v1_,const Double* v2sort,const Int64 *i,const
 
 static void newton(Report_T *report,Double* v1,const Double* v2,const int N,const Int* p,const Int64* i,const Parameter* param)
 {
-
   struct timeval time_start,time_end;
   gettimeofday(&time_start,0);
+
   int dim=param->dim;
   int dim2=dim*2;
   Double *dv=MALLOC(Double,dim2);
@@ -254,8 +265,8 @@ static void newton(Report_T *report,Double* v1,const Double* v2,const int N,cons
       //update S0
       //S0-=rankid*func_g_0(xy)+(4-rankid)*func_g_0(-xy);
       S0-=4*func_g_0(xy)-(8-2*n_ranking)*xy;
-      //Double c=-rankid*func_g_1(xy)+(4-rankid)*func_g_1(-xy);
-      Double c=4*tanh(xy)+((int)4-2*n_ranking);
+      Double c=-n_ranking*func_g_1(xy)+(4-n_ranking)*func_g_1(-xy);
+      //Double c=4*tanh(xy)+((int)4-2*n_ranking);
       //update S1
       for(t3=0;t3<dim;t3++){
         tmpv[t3]=v2_[t3]+v2_[t3+dim]*n_time;
@@ -332,6 +343,7 @@ static void newton(Report_T *report,Double* v1,const Double* v2,const int N,cons
   gettimeofday(&time_end,0);
   report->time=(time_end.tv_sec-time_start.tv_sec)+(time_end.tv_usec-time_end.tv_usec)*1e-6;
 }
+
 
 int train_prepare_param(void** param_,int argc,char **argv)
 {

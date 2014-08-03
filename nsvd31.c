@@ -297,7 +297,7 @@ static Double getS_0(const Double *v1, const Double *v2,const Int *i1,const Int 
 {
   int t1;
   Double f;
-  f=0;
+  f=LAMDA*dot(v1,v1,ndim)/2;
   while(i1!=i2){
     int movieid=(*i1)/5;
     int rankid=(*i1)%5;
@@ -316,48 +316,67 @@ static void writeVec(const Double *v1,const Double *v2,Data data,const char* nam
   fclose(file);
   printf("write vector done\n");
 }
-
-int train_prepare_param(void** param,int argc,char** argv)
+int train_prepare_param(void** param_,int argc,char **argv)
 {
-  *param=0;
-  return 0;
+  if(argc!=3){
+    printf("train usage:\n dimension\n k1\n k2\n");
+    exit(1);
+
+  }
+  Parameter* param=MALLOC(Parameter,1);
+  *param_=param;
+  int dim=atoi(argv[0]);
+  Double k1,k2;
+  sscanf(argv[1],"%lf",&k1);
+  sscanf(argv[2],"%lf",&k2);
+  param->dim=dim;
+  param->k1=k1;
+  param->k2=k2;
+  param->line_alpha=0.5;
+  param->line_beta=0.35;
+  return sizeof(Parameter);
 }
 
-int train_prepare_vector(void** vector_,void* param)
+int train_prepare_vector(void **vector,void *param_)
 {
-  int size=(ncust+nmovie)*DIM;
-  Double* vector=malloc(sizeof(Double)*size);
-  *vector_=vector;
-  for(size--;size>=0;size--){
-    ((Double*)vector)[size]=0;
+  const Parameter* param=(const Parameter*) param_;
+  int size=param->dim*2*(ncust+nmovie);
+  Double *vector_=MALLOC(Double,size);
+  *vector=vector_;
+  int t;
+  for(t=0;t<size;t++){
+    vector_[t]=(rand()/(Double)RAND_MAX-0.5);
+    if(t%(param->dim*2)>param->dim){
+      vector_[t]/=1000;
+    }
+
   }
   return size*sizeof(Double);
 }
-int train_prepare_report(void** report, void* param)
+
+int train_prepare_report(void **report,void *param_)
 {
-  *report=0;
-  return 0;
+  *report=MALLOC(Report_T,2);
+  memset(*report,0,sizeof(Report_T)*2);
+  return sizeof(Report_T)*2;
 }
 
-int train_prepare_data(void** datap,const Int64* data1,const void* param)
+int train_prepare_data(void **datap,const Int64* data1,const void* param_)
 {
-  Int *datap_=MALLOC(Int,3+ncust+nmovie+2+ntrain*2);
+  const Parameter* param=(const Parameter*)param_;
+  void *datap_=malloc(sizeof(Int)*(ncust+nmovie+2)+sizeof(Int64)*(ntrain*2));
   *datap=datap_;
-  datap_[0]=ntrain;
-  datap_[1]=ncust;
-  datap_[2]=nmovie;
-  datap_+=3;
   int t1;
   memset(datap_,0,sizeof(Int)*(ncust+nmovie+2));
   Int* p1=(Int*)datap_;
-  datap_+=(ncust+1);
+  datap_+=sizeof(Int)*(ncust+1);
   Int* p2=(Int*)datap_;
-  datap_+=(nmovie+1);
+  datap_+=sizeof(Int)*(nmovie+1);
 
-  Int* sort1=datap_;
-  datap_+=(ntrain);
-  Int* sort2=datap_;
-  datap_+=(ntrain);
+  Int64* sort1=(Int64*)datap_;
+  datap_+=sizeof(Int64)*(ntrain);
+  Int64* sort2=(Int64*)datap_;
+  datap_+=sizeof(Int64)*(ntrain);
   for(t1=0;t1<ntrain;t1++){
     Int64 n=data1[t1];
     Int n_movie=n&0xffff;
@@ -383,8 +402,8 @@ int train_prepare_data(void** datap,const Int64* data1,const void* param)
     Int n_cust=(n>>16)&0xffffff;
     Int n_ranking=(n>>40)&0xff;
     Int n_time=(n>>48)&0xffff;
-    sort1[p1[n_cust]++]=n_movie*5+n_ranking;
-    sort2[p2[n_movie]++]=n_cust*5+n_ranking;
+    sort1[p1[n_cust]++]=((Int64)n_movie<<32)+((Int64)n_ranking<<16)+n_time;
+    sort2[p2[n_movie]++]=((Int64)n_cust<<32)+((Int64)n_ranking<<16)+n_time;
   }
 
   //recover p1,p2
@@ -400,18 +419,38 @@ int train_prepare_data(void** datap,const Int64* data1,const void* param)
     printf("error in preparing data: %d %d\n",p1[ncust],p2[nmovie]);
     exit(1);
   }
-  return sizeof(Int)*(3+ncust+nmovie+2+ntrain*2);
-  
+  return sizeof(Int)*(ncust+nmovie+2)+sizeof(Int64)*ntrain*2;
 }
 
-void train_print_param(char* rt,const void * param)
+void train_print_param(char* rt,const void *param_)
 {
-  sprintf(rt,"--- empty param ---\n");
+  const Parameter* param=(const Parameter*)param_;
+  rt+=sprintf(rt,"dimension: %d\n",param->dim);
+  rt+=sprintf(rt,"k1,k2: %.4le,%.4le\n",param->k1,param->k2);
+  rt+=sprintf(rt,"alpha,beta: %.4le,%.4le\n",param->line_alpha,param->line_beta);
+}
+void train_print_report(char* rt,const void *report)
+{
+  Report_T* reports=(Report_T*)report;
+  int t;
+  for(t=0;t<2;t++){
+    rt+=sprintf(rt,"-- newton report %d --\n",t);
+    rt+=sprintf(rt,"line_search,non_stable,singular: %d,%d,%d\n",reports[t].line_search,reports[t].non_stable,reports[t].singular);
+    rt+=sprintf(rt,"size of dv,dvt: %le %le\n",reports[t].dv,reports[t].dvt);
+    rt+=sprintf(rt,"dS, S1: %le %le\n",reports[t].dS,reports[t].S1);
+    rt+=sprintf(rt,"time,training score: %lf,%lf\n",reports[t].time,reports[t].score);
+  }
 }
 
-void train_print_report(char* rt,const void * report)
+int train_prepare_vector(void** vector_,void* param)
 {
-  sprintf(rt,"--- empty report ---\n");
+  int size=(ncust+nmovie)*DIM;
+  Double* vector=malloc(sizeof(Double)*size);
+  *vector_=vector;
+  for(size--;size>=0;size--){
+    ((Double*)vector)[size]=0;
+  }
+  return size*sizeof(Double);
 }
 
 void train(const void* dat,const void* param,void *vector,void* report_x_2)
